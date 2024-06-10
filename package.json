@@ -1,0 +1,15 @@
+{
+  "dependencies": {
+    "@solana/spl-token": "^0.4.6",
+    "@solana/web3.js": "^1.92.3",
+    "algosdk": "^2.8.0",
+    "axios": "^1.7.2",
+    "bignumber.js": "^9.1.2",
+    "bs58": "^5.0.0",
+    "typescript": "^5.4.5",
+    "web3": "^4.9.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.2"
+  }
+}
