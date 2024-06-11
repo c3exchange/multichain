@@ -18,7 +18,7 @@ export const C3_ASSET_MAP: AssetMap = {
 			[ChainName.Algorand]: {
 				'wormhole': {
 					id: '1221549217',
-					decimals: 6,
+					decimals: 8,
 				}
 			},
 			[ChainName.Arbitrum]: {
@@ -34,7 +34,7 @@ export const C3_ASSET_MAP: AssetMap = {
 			[ChainName.Algorand]: {
 				'wormhole': {
 					id: '893309613',
-					decimals: 6,
+					decimals: 8,
 				},
 			},
 			[ChainName.Avalanche]: {
@@ -50,7 +50,7 @@ export const C3_ASSET_MAP: AssetMap = {
 			[ChainName.Algorand]: {
 				'wormhole': {
 					id: '891648844',
-					decimals: 6,
+					decimals: 8,
 				},
 			},
 			[ChainName.Binance]: {
@@ -66,7 +66,7 @@ export const C3_ASSET_MAP: AssetMap = {
 			[ChainName.Algorand]: {
 				'wormhole': {
 					id: '1058926737',
-					decimals: 6,
+					decimals: 8,
 				},
 			},
 		},
@@ -76,7 +76,7 @@ export const C3_ASSET_MAP: AssetMap = {
 			[ChainName.Algorand]: {
 				'wormhole': {
 					id: '887406851',
-					decimals: 6,
+					decimals: 8,
 				},
 			},
 			[ChainName.Ethereum]: {
@@ -106,7 +106,7 @@ export const C3_ASSET_MAP: AssetMap = {
 			[ChainName.Algorand]: {
 				'wormhole': {
 					id: '887648583',
-					decimals: 6,
+					decimals: 8,
 				},
 			},
 			[ChainName.Solana]: {
