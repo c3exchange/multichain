@@ -1,9 +1,10 @@
-import { InstrumentMap } from './blockchain'
+import { AssetMap } from './blockchain'
 import { AlgorandBlockchain } from './blockchains/algorand'
 import { EthereumBlockchain } from './blockchains/ethereum'
 import { SolanaBlockchain } from './blockchains/solana'
-import { CrossChain } from './crosschain'
+import { MultiChain } from './multichain'
 import { ChainName } from './references'
+import { C3_ASSET_MAP } from './c3-asset-map'
 
 export interface ChainConfigData {
 	[ChainName.Algorand]?: {
@@ -32,20 +33,24 @@ export interface ChainConfigData {
 	}
 }
 
-export interface CrossChainConfig {
-	instruments: InstrumentMap,
+export interface MultiChainConfig {
+	assets?: AssetMap,
 	chains?: ChainConfigData,
 }
 
-export function setupCrossChain(config: CrossChainConfig): CrossChain {
+export function setupMultiChain(config?: MultiChainConfig): MultiChain {
+	config ??= {}
+	config.assets ??= C3_ASSET_MAP
+	config.chains ??= {}
+
 	const blockchains = {
-		[ChainName.Algorand]: new AlgorandBlockchain(ChainName.Algorand, config.instruments, config.chains?.algorand?.apiUrl, config.chains?.algorand?.indexerUrl),
-		[ChainName.Arbitrum]: new EthereumBlockchain(ChainName.Arbitrum, config.instruments, config.chains?.arbitrum?.apiUrl, config.chains?.arbitrum?.roundsToFinalize),
-		[ChainName.Avalanche]: new EthereumBlockchain(ChainName.Avalanche, config.instruments, config.chains?.avalanche?.apiUrl, config.chains?.avalanche?.roundsToFinalize),
-		[ChainName.Binance]: new EthereumBlockchain(ChainName.Binance, config.instruments, config.chains?.binance?.apiUrl, config.chains?.binance?.roundsToFinalize),
-		[ChainName.Ethereum]: new EthereumBlockchain(ChainName.Ethereum, config.instruments, config.chains?.ethereum?.apiUrl, config.chains?.ethereum?.roundsToFinalize),
-		[ChainName.Solana]: new SolanaBlockchain(ChainName.Solana, config.instruments, config.chains?.solana?.apiUrl, config.chains?.solana?.priorityRate),
+		[ChainName.Algorand]: new AlgorandBlockchain(ChainName.Algorand, config.assets, config.chains.algorand?.apiUrl, config.chains.algorand?.indexerUrl),
+		[ChainName.Arbitrum]: new EthereumBlockchain(ChainName.Arbitrum, config.assets, config.chains.arbitrum?.apiUrl, config.chains.arbitrum?.roundsToFinalize),
+		[ChainName.Avalanche]: new EthereumBlockchain(ChainName.Avalanche, config.assets, config.chains.avalanche?.apiUrl, config.chains.avalanche?.roundsToFinalize),
+		[ChainName.Binance]: new EthereumBlockchain(ChainName.Binance, config.assets, config.chains.binance?.apiUrl, config.chains.binance?.roundsToFinalize),
+		[ChainName.Ethereum]: new EthereumBlockchain(ChainName.Ethereum, config.assets, config.chains.ethereum?.apiUrl, config.chains.ethereum?.roundsToFinalize),
+		[ChainName.Solana]: new SolanaBlockchain(ChainName.Solana, config.assets, config.chains.solana?.apiUrl, config.chains.solana?.priorityRate),
 	}
 
-	return new CrossChain(blockchains)
+	return new MultiChain(blockchains)
 }

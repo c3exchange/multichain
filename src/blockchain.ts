@@ -1,30 +1,30 @@
 import BigNumber from 'bignumber.js'
 
 import { Base64String } from './base64'
-import { ChainName, InstrumentName, InstrumentRef, ChainInstrumentRef, AccountRef, BlockRef, ChainRef, TransactionRef } from './references'
+import { ChainName, AssetName, AssetRef, AssetInstanceRef, AccountRef, BlockRef, ChainRef, TransactionRef } from './references'
 
 export type RawChainRef = string
 
-export interface InstrumentInstanceData {
+export interface AssetInstanceData {
 	decimals: number
 	id: RawChainRef
 }
 
-export interface InstrumentData {
-	chains: Partial<Record<ChainName, Record<string, InstrumentInstanceData>>>
+export interface AssetData {
+	chains: Partial<Record<ChainName, Record<string, AssetInstanceData>>>
 }
 
-export type InstrumentMap = Record<InstrumentName, InstrumentData>
+export type AssetMap = Record<AssetName, AssetData>
 
 export type DecimalString = string
 
-export interface InstrumentAmount {
-	id: InstrumentRef
+export interface AssetAmount {
+	id: AssetRef
 	amount: DecimalString
 }
 
-export interface ChainInstrumentAmount {
-	id: ChainInstrumentRef
+export interface ChainAssetAmount {
+	id: AssetInstanceRef
 	amount: DecimalString
 }
 
@@ -41,7 +41,13 @@ export interface TransferTransaction {
 	type: TransactionType.Transfer
 	from: Account
 	to: AccountRef
-	amount: ChainInstrumentAmount
+	amount: ChainAssetAmount
+
+	[ChainName.Solana]?: {
+		accountCreationPayer: Account
+		fromTokenAccount: AccountRef
+		toTokenAccount: AccountRef
+	}
 }
 
 export type TransactionRequest = TransferTransaction
@@ -60,21 +66,25 @@ export interface Block {
 export interface BlockchainInternalTransferRequest {
 	from: string
 	fromPrivateKey: Base64String
-	fromTokenAccount?: string
 	to: string
-	toTokenAccount?: string
 	amount: bigint
-	instrument: string
+	asset: string
+
+	[ChainName.Solana]?: {
+		creationPayerPrivateKey?: string
+		fromTokenAccount?: string
+		toTokenAccount?: string
+	}
 }
 
 export abstract class Blockchain {
 	private readonly _id: ChainRef
 
 	public constructor(
-		name: ChainName,
-		protected readonly _instruments: InstrumentMap,
+		chain: ChainName,
+		protected readonly _assets: AssetMap,
 	) {
-		this._id = new ChainRef(name)
+		this._id = new ChainRef(chain)
 	}
 
 	public get id(): ChainRef {
@@ -94,8 +104,8 @@ export abstract class Blockchain {
 			switch (type) {
 				case TransactionType.Transfer: {
 					// Verify sender is on the same chain
-					const fromChain = from.id.chain
 					const localChain = this.id.chain
+					const fromChain = from.id.chain
 					if (fromChain !== localChain) {
 						throw new Error(`Sender account is on ${fromChain}, but transaction is being processed by ${this.id}`)
 					}
@@ -111,19 +121,19 @@ export abstract class Blockchain {
 						throw new Error(`Both sender and receiver are the same: ${from.id.account}`)
 					}
 
-					// Load instrument amount data
+					// Load asset amount data
 					const { id, amount: amountValue } = amount
 
-					// Unref instrument data
-					const instrumentData = this._instruments[id.instrument]
-					if (!instrumentData) {
-						throw new Error(`Instrument ${id.instrument} not found`)
+					// Unref asset data
+					const assetData = this._assets[id.asset]
+					if (!assetData) {
+						throw new Error(`Asset ${id.asset} not found`)
 					}
 
-					// Unref chain instrument data
-					const chainData = instrumentData.chains[localChain]
+					// Unref chain asset data
+					const chainData = assetData.chains[localChain]
 					if (!chainData) {
-						throw new Error(`Instrument ${id.instrument} not found on ${this.id}`)
+						throw new Error(`Asset ${id.asset} not found on ${this.id}`)
 					}
 
 					// Get instance data
@@ -134,13 +144,19 @@ export abstract class Blockchain {
 					const amountScaled = BigInt(new BigNumber(amountValue).multipliedBy(scale).toFixed())
 
 					// Create transfer request
-					pending.push({
+					const request: BlockchainInternalTransferRequest = {
 						from: from.id.account,
 						fromPrivateKey: from.privateKey,
 						to: to.account,
 						amount: amountScaled,
-						instrument: instanceData.id,
-					})
+						asset: instanceData.id,
+					}
+
+					// Set chain-specific fields
+					this.setChainSpecificFields(request, baseTx)
+
+					// Add to pending list
+					pending.push(request)
 				}
 			}
 		}
@@ -148,5 +164,6 @@ export abstract class Blockchain {
 		return this.sendTransferTransactions(pending)
 	}
 
+	protected abstract setChainSpecificFields(request: BlockchainInternalTransferRequest, baseTx: TransferTransaction): void
 	protected abstract sendTransferTransactions(transfers: BlockchainInternalTransferRequest[]): Promise<TransactionRef[]>
 }

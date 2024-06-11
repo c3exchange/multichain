@@ -11,7 +11,7 @@ function checkChainName(value: string): value is ChainName {
 	return Object.values(ChainName).includes(value as ChainName)
 }
 
-export enum InstrumentName {
+export enum AssetName {
 	ALGO = 'algo',
 	AVAX = 'avax',
 	BTC = 'btc',
@@ -24,8 +24,8 @@ export enum InstrumentName {
 	W = 'w',
 }
 
-export function checkInstrumentName(value: string): value is InstrumentName {
-	return Object.values(InstrumentName).includes(value as InstrumentName)
+export function checkAssetName(value: string): value is AssetName {
+	return Object.values(AssetName).includes(value as AssetName)
 }
 
 export class ChainRef {
@@ -113,44 +113,44 @@ export class BlockRef {
 	}
 }
 
-export class InstrumentRef {
-	public static fromString(value: string): InstrumentRef {
-		const [c3, instruments, instrument] = value.split(':')
-		if (c3 !== 'c3' || instruments !== 'instruments' || !checkInstrumentName(instrument)) {
-			throw new Error(`Invalid instrument reference: ${value}`)
+export class AssetRef {
+	public static fromString(value: string): AssetRef {
+		const [c3, assets, asset] = value.split(':')
+		if (c3 !== 'c3' || assets !== 'assets' || !checkAssetName(asset)) {
+			throw new Error(`Invalid asset reference: ${value}`)
 		}
 
-		// TODO: Validate instrument format
+		// TODO: Validate asset ID format
 
-		return new InstrumentRef(instrument)
+		return new AssetRef(asset)
 	}
 
 	public constructor(
-		public readonly instrument: InstrumentName,
+		public readonly asset: AssetName,
 	) {}
 
 	public toString(): string {
-		return `c3:instruments:${this.instrument}`
+		return `c3:assets:${this.asset}`
 	}
 }
 
-export class ChainInstrumentRef {
-	public static fromString(value: string): ChainInstrumentRef {
-		const [c3, chains, chain, instruments, instrument, instance] = value.split(':')
-		if (c3 !== 'c3' || chains !== 'chains' || !checkChainName(chain) || instruments !== 'instruments' || !checkInstrumentName(instrument)) {
-			throw new Error(`Invalid chain instrument reference: ${value}`)
+export class AssetInstanceRef {
+	public static fromString(value: string): AssetInstanceRef {
+		const [c3, chains, chain, assets, asset, instance] = value.split(':')
+		if (c3 !== 'c3' || chains !== 'chains' || !checkChainName(chain) || assets !== 'assets' || !checkAssetName(asset)) {
+			throw new Error(`Invalid chain asset reference: ${value}`)
 		}
 
-		return new ChainInstrumentRef(chain, instrument, instance)
+		return new AssetInstanceRef(chain, asset, instance)
 	}
 
 	public constructor(
 		public readonly chain: ChainName,
-		public readonly instrument: InstrumentName,
+		public readonly asset: AssetName,
 		public readonly instance: string = '',
 	) {}
 
 	public toString(): string {
-		return `c3:chains:${this.chain}:instruments:${this.instrument}${this.instance === '' ? '' : `:${this.instance}`}`
+		return `c3:chains:${this.chain}:assets:${this.asset}${this.instance === '' ? '' : `:${this.instance}`}`
 	}
 }

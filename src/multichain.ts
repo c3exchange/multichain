@@ -1,7 +1,7 @@
 import { ChainName, TransactionRef } from './references'
 import { Blockchain, Block, TransactionRequest, TransactionType, TransactionStatus } from './blockchain'
 
-export class CrossChain {
+export class MultiChain {
 	public constructor(
 		private readonly _blockchains: Record<ChainName, Blockchain>,
 	) {}
@@ -26,14 +26,14 @@ export class CrossChain {
 					// Load transaction data
 					const { from, to, amount } = transaction
 
-					// Validate sender, receiver, and instrument chains
+					// Validate sender, receiver, and asset chains
 					const chain = from.id.chain
 					if (chain !== to.chain) {
 						throw new Error(`Cross-chain transfers are not supported: source ${chain} -> destination ${to.chain}`)
 					}
 
 					if (amount.id.chain !== chain) {
-						throw new Error(`Can't use instrument from chain ${amount.id.chain} on chain ${chain}`)
+						throw new Error(`Can't use asset from chain ${amount.id.chain} on chain ${chain}`)
 					}
 
 					// Prepare transaction
