@@ -46,6 +46,7 @@ export class MultiChain {
 					const preparedList = prepared.get(from.chain) ?? []
 					preparedList.push({ transaction, index })
 					prepared.set(from.chain, preparedList)
+					break
 				}
 				default: {
 					throw new Error('Unknown transaction type')

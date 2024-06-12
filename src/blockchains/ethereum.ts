@@ -3,6 +3,7 @@ import { Contract } from 'web3-eth-contract'
 
 import { ChainName, BlockRef, TransactionRef } from '../references'
 import { Blockchain, Block, TransactionStatus, BlockchainInternalTransferRequest, TransferTransaction, PartialAssetMap } from '../blockchain'
+import { decodeBase64 } from '../base64'
 
 const ABI_ERC20 = [
 	{
@@ -123,18 +124,22 @@ export class EthereumBlockchain extends Blockchain {
 				}
 			}
 			
+			// Create, sign, and send transaction
 			const baseTxn = await createTransferTransaction(transfer)
-			const signedTxn = await this._web3.eth.accounts.signTransaction(baseTxn, transfer.fromPrivateKey)
+			const signedTxn = await this._web3.eth.accounts.signTransaction(baseTxn, decodeBase64(transfer.fromPrivateKey))
 			const result = this._web3.eth.sendSignedTransaction(signedTxn.rawTransaction)
 
+			// Attach to the result events to track the transaction until it leaves the cache
 			return new Promise((resolve, reject) => {
 				result.once('transactionHash', (hash) => {
 					this._sentPending.add(hash)
 					resolve(new TransactionRef(this.id.chain, hash))
 				})
 
+				// Save fields from `this` to be used in the confirmation handler
 				const roundsToFinalize = this._roundsToFinalize
 				const sentPending = this._sentPending
+
 				result.on('confirmation', function confirmationCheck({ confirmations, receipt }) {
 					// NOTE: The cache will only return up to 12 confirmations
 					const CAHED_ROUNDS_MAX = 12

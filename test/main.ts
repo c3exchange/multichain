@@ -13,12 +13,12 @@ async function testSendTransactions(multi: MultiChain): Promise<TransactionRef[]
 		{
 			type: TransactionType.Transfer,
 			from: {
-				id: 'c3:chains:avalanche:0xf2e791718CF3659e7629F738A8e479d8c59C6581',
+				id: 'c3:chains:avalanche:accounts:0xf2e791718CF3659e7629F738A8e479d8c59C6581',
 				privateKey: '<REDACTED>',
 			},
-			to: `c3:chains:avalanche:0xEEE612a77e786b14d8BA8180507c9504BcD84846`,
+			to: `c3:chains:avalanche:accounts:0xEEE612a77e786b14d8BA8180507c9504BcD84846`,
 			amount: {
-				id: 'c3:chains:avalanche:avax',
+				id: 'c3:chains:avalanche:assets:avax',
 				amount: '1.00',
 			},
 		},
