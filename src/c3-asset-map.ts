@@ -23,7 +23,7 @@ export const C3_ASSET_MAP: AssetMap = {
 			},
 			[ChainName.Arbitrum]: {
 				'': {
-					id: '0x0000000000000000000000000000000000000000',
+					id: '0x912CE59144191C1204E64559FE8253a0e49E6548',
 					decimals: 18,
 				},
 			},
@@ -42,6 +42,10 @@ export const C3_ASSET_MAP: AssetMap = {
 					id: '0x0000000000000000000000000000000000000000',
 					decimals: 18,
 				},
+				'wrapped': {
+					id: '0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7',
+					decimals: 18,
+				},
 			},
 		},
 	},
@@ -58,6 +62,10 @@ export const C3_ASSET_MAP: AssetMap = {
 					id: '0x0000000000000000000000000000000000000000',
 					decimals: 18,
 				},
+				'wrapped': {
+					id: '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c',
+					decimals: 18,
+				}
 			},
 		},
 	},
@@ -66,6 +74,12 @@ export const C3_ASSET_MAP: AssetMap = {
 			[ChainName.Algorand]: {
 				'wormhole': {
 					id: '1058926737',
+					decimals: 8,
+				},
+			},
+			[ChainName.Ethereum]: {
+				'wrapped': {
+					id: '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599',
 					decimals: 8,
 				},
 			},
@@ -85,7 +99,13 @@ export const C3_ASSET_MAP: AssetMap = {
 					decimals: 18,
 				},
 				'wrapped': {
-					id: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+					id: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+					decimals: 18,
+				},
+			},
+			[ChainName.Arbitrum]: {
+				'': {
+					id: '0x0000000000000000000000000000000000000000',
 					decimals: 18,
 				},
 			},
@@ -96,6 +116,12 @@ export const C3_ASSET_MAP: AssetMap = {
 			[ChainName.Algorand]: {
 				'wormhole': {
 					id: '1684682524',
+					decimals: 6,
+				},
+			},
+			[ChainName.Solana]: {
+				'': {
+					id: 'HZ1JovNiVvGrGNiiYvEozEVgZ58xaU3RKwX8eACQBCt3',
 					decimals: 6,
 				},
 			},
@@ -114,6 +140,10 @@ export const C3_ASSET_MAP: AssetMap = {
 					id: SystemProgram.programId.toBase58(),
 					decimals: 9,
 				},
+				'wrapped': {
+					id: 'So11111111111111111111111111111111111111112',
+					decimals: 9,
+				}
 			},
 		},
 	},
@@ -125,6 +155,12 @@ export const C3_ASSET_MAP: AssetMap = {
 					decimals: 6,
 				},
 			},
+			[ChainName.Avalanche]: {
+				'': {
+					id: '0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E',
+					decimals: 6,
+				}
+			}
 		},
 	},
 	[AssetName.W]: {
@@ -132,6 +168,12 @@ export const C3_ASSET_MAP: AssetMap = {
 			[ChainName.Algorand]: {
 				'wormhole': {
 					id: '1703994770',
+					decimals: 6,
+				},
+			},
+			[ChainName.Solana]: {
+				'': {
+					id: '85VBFQZC9TZkfaptBWjvUw7YbZjy52A6mjtPGjstQAmQ',
 					decimals: 6,
 				},
 			},
