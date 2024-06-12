@@ -3,7 +3,7 @@ import axios, { AxiosInstance } from 'axios'
 
 import { decodeBase64 } from '../base64'
 import { ChainName, BlockRef, TransactionRef } from '../references'
-import { Blockchain, InstrumentMap, Block, BlockchainInternalTransferRequest, TransactionStatus } from '../blockchain'
+import { Blockchain, Block, BlockchainInternalTransferRequest, TransactionStatus, TransferTransaction, PartialAssetMap } from '../blockchain'
 
 interface AlgorandParams {
 	fee: number
@@ -20,11 +20,11 @@ export class AlgorandBlockchain extends Blockchain {
 
 	public constructor(
 		chain: ChainName,
-		instruments: InstrumentMap,
-		apiUrl = 'https://mainnet-api.algonode.cloud',
-		indexerUrl = 'https://mainnet-idx.algonode.cloud',
+		assets: PartialAssetMap,
+		apiUrl: string,
+		indexerUrl: string,
 	) {
-		super(chain, instruments)
+		super(chain, assets)
 
 		this._api = axios.create({
 			baseURL: apiUrl,
@@ -71,6 +71,10 @@ export class AlgorandBlockchain extends Blockchain {
 			return TransactionStatus.Failed
 		}))
 	}
+	
+	protected setChainSpecificFields(request: BlockchainInternalTransferRequest, baseTx: TransferTransaction): void {
+		// Algorand does not require any chain-specific fields
+	}
 
 	protected async sendTransferTransactions(transfers: BlockchainInternalTransferRequest[]): Promise<TransactionRef[]> {
 		const paramsResult = await this._api.get('/v2/transactions/params')
@@ -95,7 +99,7 @@ export class AlgorandBlockchain extends Blockchain {
 		const results: TransactionRef[] = []
 		for (const transfer of transfers) {
 			// Prepare transaction
-			const assetId = parseInt(transfer.instrument)
+			const assetId = parseInt(transfer.asset)
 			const txn = preparePayTxn(transfer.from, transfer.to, transfer.amount, assetId)
 			const signedTxn = txn.signTxn(decodeBase64(transfer.fromPrivateKey))
 

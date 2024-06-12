@@ -1,7 +1,7 @@
 import { setupMultiChain } from '../src'
 import { TransactionRequest, TransactionType } from '../src/blockchain'
 import { MultiChain } from '../src/multichain'
-import { TransactionRef } from '../src/references'
+import { ChainName, TransactionRef } from '../src/references'
 
 async function testGetCurrentBlocks(multi: MultiChain): Promise<void> {
 	const blocks = await multi.getCurrentBlocks()
@@ -9,21 +9,17 @@ async function testGetCurrentBlocks(multi: MultiChain): Promise<void> {
 }
 
 async function testSendTransactions(multi: MultiChain): Promise<TransactionRef[]> {
-	const algoFromAddress = ''
-	const algoFromPrivateKey = ''
-	const algoToAddress = ''
-
 	const transactions: TransactionRequest[] = [
 		{
 			type: TransactionType.Transfer,
 			from: {
-				id: `c3:chains:algorand:${algoFromAddress}`,
-				privateKey: algoFromPrivateKey,
+				id: 'c3:chains:avalanche:0xf2e791718CF3659e7629F738A8e479d8c59C6581',
+				privateKey: '<REDACTED>',
 			},
-			to: `c3:chains:algorand:${algoToAddress}`,
+			to: `c3:chains:avalanche:0xEEE612a77e786b14d8BA8180507c9504BcD84846`,
 			amount: {
-				id: 'c3:chains:algorand:assets:algo',
-				amount: '1.00'
+				id: 'c3:chains:avalanche:avax',
+				amount: '1.00',
 			},
 		},
 	]
@@ -38,7 +34,15 @@ async function testGetTransactionStatus(multi: MultiChain, transactions: Transac
 }
 
 async function main(): Promise<void> {
-	const multi = setupMultiChain()
+	const multi = setupMultiChain({
+		chains: {
+			[ChainName.Avalanche]: {
+				apiUrl: 'https://avalanche-fuji.blockpi.network/v1/rpc/public',
+				roundsToFinalize: 12,
+			},
+		},
+	})
+
 	await testGetCurrentBlocks(multi)
 	const txs = await testSendTransactions(multi)
 	console.log(txs.map(tx => tx.toString()))

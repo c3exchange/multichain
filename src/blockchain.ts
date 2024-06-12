@@ -15,6 +15,7 @@ export interface AssetData {
 }
 
 export type AssetMap = Record<AssetName, AssetData>
+export type PartialAssetMap = Partial<AssetMap>
 
 export type DecimalString = string
 
@@ -71,6 +72,7 @@ export interface BlockchainInternalTransferRequest {
 	asset: string
 
 	[ChainName.Solana]?: {
+		priorityRate?: number
 		creationPayerPrivateKey?: string
 		fromTokenAccount?: string
 		toTokenAccount?: string
@@ -82,7 +84,7 @@ export abstract class Blockchain {
 
 	public constructor(
 		chain: ChainName,
-		protected readonly _assets: AssetMap,
+		protected readonly _assets: PartialAssetMap,
 	) {
 		this._id = new ChainRef(chain)
 	}

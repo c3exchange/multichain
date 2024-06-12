@@ -1,8 +1,8 @@
-import { ContractAbi, TransactionReceipt, Web3 } from 'web3'
+import { ContractAbi, Web3 } from 'web3'
 import { Contract } from 'web3-eth-contract'
 
 import { ChainName, BlockRef, TransactionRef } from '../references'
-import { Blockchain, InstrumentMap, Block, TransactionRequest, TransactionType, TransactionStatus, BlockchainInternalTransferRequest } from '../blockchain'
+import { Blockchain, Block, TransactionStatus, BlockchainInternalTransferRequest, TransferTransaction, PartialAssetMap } from '../blockchain'
 
 const ABI_ERC20 = [
 	{
@@ -26,13 +26,13 @@ export class EthereumBlockchain extends Blockchain {
 
 	public constructor(
 		chain: ChainName,
-		instruments: InstrumentMap,
-		private readonly _rpcUrl = 'https://ethereum-rpc.publicnode.com',
+		assets: PartialAssetMap,
+		rpcUrl: string,
 		private readonly _roundsToFinalize = 12,
 	) {
-		super(chain, instruments)
+		super(chain, assets)
 
-		this._web3 = new Web3(this._rpcUrl)
+		this._web3 = new Web3(rpcUrl)
 
 		// Extend the web3 object with the txpool method
 		this._web3.extend({
@@ -83,6 +83,10 @@ export class EthereumBlockchain extends Blockchain {
 			return confirmed ? TransactionStatus.Confirmed : TransactionStatus.Pending
 		}))
 	}
+	
+	protected setChainSpecificFields(request: BlockchainInternalTransferRequest, baseTx: TransferTransaction): void {
+		// Ethereum does not require any chain-specific fields	
+	}
 
 	protected sendTransferTransactions(transfers: BlockchainInternalTransferRequest[]): Promise<TransactionRef[]> {
 		// TODO: Use batching
@@ -90,7 +94,7 @@ export class EthereumBlockchain extends Blockchain {
 			const createTransferTransaction = async (transfer: BlockchainInternalTransferRequest) => {
 				const gasPrice = await this._web3.eth.getGasPrice()
 
-				if (transfer.instrument === '0x0000000000000000000000000000000000000000') {
+				if (transfer.asset === '0x0000000000000000000000000000000000000000') {
 					// Ether transfer
 					return {
 						from: transfer.from,
@@ -104,12 +108,12 @@ export class EthereumBlockchain extends Blockchain {
 
 					// NOTE/FIXME: This will only work if address is actually an ERC20 token
 					// TODO: Include other token types, somehow tag them or look up the token type
-					const contract = this._contractCache[transfer.instrument] ??= new this._web3.eth.Contract(ABI_ERC20, transfer.instrument)
+					const contract = this._contractCache[transfer.asset] ??= new this._web3.eth.Contract(ABI_ERC20, transfer.asset)
 					const nonce = await this._web3.eth.getTransactionCount(transfer.from)
 
 					return {
 						from: transfer.from,
-						to: transfer.instrument,
+						to: transfer.asset,
 						value: 0,
 						data: contract.methods.transfer(transfer.to, transfer.amount).encodeABI(),
 						nonce,

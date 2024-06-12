@@ -20,7 +20,7 @@ import {
 } from '@solana/web3.js'
 
 import { ChainName, BlockRef, TransactionRef } from '../references'
-import { Blockchain, InstrumentMap, Block, TransactionStatus, BlockchainInternalTransferRequest } from '../blockchain'
+import { Blockchain, Block, TransactionStatus, BlockchainInternalTransferRequest, TransferTransaction, PartialAssetMap } from '../blockchain'
 import { decodeBase64 } from '../base64'
 
 export class SolanaBlockchain extends Blockchain {
@@ -28,11 +28,10 @@ export class SolanaBlockchain extends Blockchain {
 
 	public constructor(
 		chain: ChainName,
-		instruments: InstrumentMap,
+		assets: PartialAssetMap,
 		baseURL = 'https://api.mainnet-beta.solana.com',
-		private readonly _priorityRate = 12345,
 	) {
-		super(chain, instruments)
+		super(chain, assets)
 
 		this._connection = new Connection(baseURL)
 	}
@@ -60,11 +59,20 @@ export class SolanaBlockchain extends Blockchain {
 		})
 	}
 
+	protected setChainSpecificFields(request: BlockchainInternalTransferRequest, baseTx: TransferTransaction): void {
+		// TODO: Perform validation on each field
+		request.solana = {
+			creationPayerPrivateKey: baseTx.solana?.accountCreationPayer.privateKey,
+			fromTokenAccount: baseTx.solana?.fromTokenAccount,
+			toTokenAccount: baseTx.solana?.toTokenAccount,
+		}
+	}
+
 	protected async sendTransferTransactions(transfers: BlockchainInternalTransferRequest[]): Promise<TransactionRef[]> {
-		const getTA = async (payer: Signer, owner: PublicKey, instrument: PublicKey, tokenAccount?: PublicKey): Promise<{ key: PublicKey, instructions: TransactionInstruction[] }> => {
+		const getTA = async (payer: Signer, owner: PublicKey, asset: PublicKey, tokenAccount?: PublicKey): Promise<{ key: PublicKey, instructions: TransactionInstruction[] }> => {
 			// If the token account is not provided, use the ATA for the owner
 			if (tokenAccount === undefined) {
-				tokenAccount = await getAssociatedTokenAddress(instrument, owner, true)
+				tokenAccount = await getAssociatedTokenAddress(asset, owner, true)
 			}
 
 			// Check if the token account exists
@@ -82,7 +90,7 @@ export class SolanaBlockchain extends Blockchain {
 
 				const initTokenAccountInstruction = createInitializeAccountInstruction(
 					tokenAccount,
-					instrument,
+					asset,
 					owner,
 				)
 
@@ -99,8 +107,8 @@ export class SolanaBlockchain extends Blockchain {
 			}
 		}
 
-		const genericTransfer = (fromTA: PublicKey, toTA: PublicKey, from: PublicKey, instrument: string, amount: number | bigint) => {
-			if (instrument === SystemProgram.programId.toBase58()) {
+		const genericTransfer = (fromTA: PublicKey, toTA: PublicKey, from: PublicKey, asset: string, amount: number | bigint) => {
+			if (asset === SystemProgram.programId.toBase58()) {
 				return SystemProgram.transfer({
 					fromPubkey: fromTA,
 					toPubkey: toTA,
@@ -117,22 +125,47 @@ export class SolanaBlockchain extends Blockchain {
 		}
 
 		const blockhash = await this._connection.getLatestBlockhash()
-		const priorityInstruction = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: this._priorityRate })
 
 		return Promise.all(transfers.map(async (transfer) => {
 			// Extract transfer info
 			const payer = Keypair.fromSecretKey(decodeBase64(transfer.fromPrivateKey))
 			const fromAccount = payer.publicKey
 			const toAccount = new PublicKey(transfer.to)
-			const instrument = new PublicKey(transfer.instrument)
-			const fromTABase = transfer.fromTokenAccount ? new PublicKey(transfer.fromTokenAccount) : undefined
+			const asset = new PublicKey(transfer.asset)
+			
+			// Extract token accounts
+			const mapTA = (ta?: string) => ta ? new PublicKey(ta) : undefined
+			const fromTABase = mapTA(transfer.solana?.fromTokenAccount)
+			const toTABase = mapTA(transfer.solana?.toTokenAccount)
 
 			// Get/create relevant TAs
-			const { key: fromTA, instructions: fromTAInstructions } = await getTA(payer, fromAccount, instrument, fromTABase)
-			const { key: toTA, instructions: toTAInstructions } = await getTA(payer, toAccount, instrument)
+			const { key: fromTA, instructions: fromTAInstructions } = await getTA(payer, fromAccount, asset, fromTABase)
+			const { key: toTA, instructions: toTAInstructions } = await getTA(payer, toAccount, asset, toTABase)
+
+			// Create priority instruction
+			const getNetworkPriorityRate = async () => {
+				const fees = await this._connection.getRecentPrioritizationFees({ lockedWritableAccounts: [fromTA, toTA, asset] })
+				
+				// Average fees with an exponential moving average
+				const alpha = 0.9
+
+				let sum = 0
+				let weight = 0
+				let scale = 1
+				for (let i = fees.length - 1; i >= 0; i--) {
+					sum += fees[i].prioritizationFee * scale
+					weight += scale
+					scale *= alpha
+				}
+
+				return sum / weight
+			}
+
+			const priorityRate = transfer.solana?.priorityRate ?? await getNetworkPriorityRate()
+			const priorityInstruction = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: priorityRate })
 
 			// Create transfer instruction
-			const transferInstruction = genericTransfer(fromTA, toTA, new PublicKey(transfer.from), transfer.instrument, transfer.amount)
+			const transferInstruction = genericTransfer(fromTA, toTA, new PublicKey(transfer.from), transfer.asset, transfer.amount)
 
 			// Create message
 			const message = new TransactionMessage({
