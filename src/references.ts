@@ -47,8 +47,10 @@ export class ChainRef {
 	}
 }
 
+export type AccountRefString = string
+
 export class AccountRef {
-	public static fromString(value: string): AccountRef {
+	public static fromString(value: AccountRefString): AccountRef {
 		const [c3, chains, chain, accounts, account] = value.split(':')
 		if (c3 !== 'c3' || chains !== 'chains' || !checkChainName(chain) || accounts !== 'accounts') {
 			throw new Error(`Invalid account reference: ${value}`)
@@ -64,13 +66,15 @@ export class AccountRef {
 		public readonly account: string,
 	) {}
 
-	public toString(): string {
+	public toString(): AccountRefString {
 		return `c3:chains:${this.chain}:accounts:${this.account}`
 	}
 }
 
+export type TransactionRefString = string
+
 export class TransactionRef {
-	public static fromString(value: string): TransactionRef {
+	public static fromString(value: TransactionRefString): TransactionRef {
 		const [c3, chains, chain, transactions, transaction] = value.split(':')
 		if (c3 !== 'c3' || chains !== 'chains' || !checkChainName(chain) || transactions !== 'transactions') {
 			throw new Error(`Invalid transaction reference: ${value}`)
@@ -86,13 +90,15 @@ export class TransactionRef {
 		public readonly transaction: string,
 	) {}
 
-	public toString(): string {
+	public toString(): TransactionRefString {
 		return `c3:chains:${this.chain}:transactions:${this.transaction}`
 	}
 }
 
+export type BlockRefString = string
+
 export class BlockRef {
-	public static fromString(value: string): BlockRef {
+	public static fromString(value: BlockRefString): BlockRef {
 		const [c3, chains, chain, blocks, block] = value.split(':')
 		if (c3 !== 'c3' || chains !== 'chains' || !checkChainName(chain) || blocks !== 'blocks') {
 			throw new Error(`Invalid block reference: ${value}`)
@@ -108,13 +114,15 @@ export class BlockRef {
 		public readonly block: string,
 	) {}
 
-	public toString(): string {
+	public toString(): BlockRefString {
 		return `c3:chains:${this.chain}:blocks:${this.block}`
 	}
 }
 
+export type AssetRefString = string
+
 export class AssetRef {
-	public static fromString(value: string): AssetRef {
+	public static fromString(value: AssetRefString): AssetRef {
 		const [c3, assets, asset] = value.split(':')
 		if (c3 !== 'c3' || assets !== 'assets' || !checkAssetName(asset)) {
 			throw new Error(`Invalid asset reference: ${value}`)
@@ -129,13 +137,15 @@ export class AssetRef {
 		public readonly asset: AssetName,
 	) {}
 
-	public toString(): string {
+	public toString(): AssetRefString {
 		return `c3:assets:${this.asset}`
 	}
 }
 
+export type AssetInstanceRefString = string
+
 export class AssetInstanceRef {
-	public static fromString(value: string): AssetInstanceRef {
+	public static fromString(value: AssetInstanceRefString): AssetInstanceRef {
 		const [c3, chains, chain, assets, asset, instance] = value.split(':')
 		if (c3 !== 'c3' || chains !== 'chains' || !checkChainName(chain) || assets !== 'assets' || !checkAssetName(asset)) {
 			throw new Error(`Invalid chain asset reference: ${value}`)
@@ -150,7 +160,7 @@ export class AssetInstanceRef {
 		public readonly instance: string = '',
 	) {}
 
-	public toString(): string {
+	public toString(): AssetInstanceRefString {
 		return `c3:chains:${this.chain}:assets:${this.asset}${this.instance === '' ? '' : `:${this.instance}`}`
 	}
 }

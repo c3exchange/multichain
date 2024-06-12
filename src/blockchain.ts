@@ -1,7 +1,7 @@
 import BigNumber from 'bignumber.js'
 
 import { Base64String } from './base64'
-import { ChainName, AssetName, AssetRef, AssetInstanceRef, AccountRef, BlockRef, ChainRef, TransactionRef } from './references'
+import { ChainName, AssetName, AssetRef, AssetInstanceRef, AccountRef, BlockRef, ChainRef, TransactionRef, AccountRefString, AssetInstanceRefString } from './references'
 
 export type RawChainRef = string
 
@@ -24,12 +24,12 @@ export interface AssetAmount {
 }
 
 export interface ChainAssetAmount {
-	id: AssetInstanceRef
+	id: AssetInstanceRefString
 	amount: DecimalString
 }
 
 export interface Account {
-	id: AccountRef
+	id: AccountRefString
 	privateKey: Base64String
 }
 
@@ -40,13 +40,13 @@ export enum TransactionType {
 export interface TransferTransaction {
 	type: TransactionType.Transfer
 	from: Account
-	to: AccountRef
+	to: AccountRefString
 	amount: ChainAssetAmount
 
 	[ChainName.Solana]?: {
 		accountCreationPayer: Account
-		fromTokenAccount: AccountRef
-		toTokenAccount: AccountRef
+		fromTokenAccount: AccountRefString
+		toTokenAccount: AccountRefString
 	}
 }
 
@@ -98,55 +98,58 @@ export abstract class Blockchain {
 		const pending: BlockchainInternalTransferRequest[] = []
 
 		for (let baseTx of transactions) {
-			// Load and unref transaction data
-			const { type, from, to, amount } = baseTx
-
-			switch (type) {
+			switch (baseTx.type) {
 				case TransactionType.Transfer: {
 					// Verify sender is on the same chain
 					const localChain = this.id.chain
-					const fromChain = from.id.chain
-					if (fromChain !== localChain) {
-						throw new Error(`Sender account is on ${fromChain}, but transaction is being processed by ${this.id}`)
+					const from = AccountRef.fromString(baseTx.from.id)
+					if (from.chain !== localChain) {
+						throw new Error(`Sender account is on ${from.chain}, but transaction is being processed by ${this.id}`)
 					}
 
 					// Verify receiver is on the same chain
-					const toChain = to.chain
-					if (toChain !== localChain) {
-						throw new Error(`Receiver account is on ${toChain}, but transaction is being processed by ${this.id}`)
+					const to = AccountRef.fromString(baseTx.to)
+					if (to.chain !== localChain) {
+						throw new Error(`Receiver account is on ${to.chain}, but transaction is being processed by ${this.id}`)
 					}
 
 					// Verify sender and receiver are different
-					if (from.id.account === to.account) {
-						throw new Error(`Both sender and receiver are the same: ${from.id.account}`)
+					if (from.account === to.account) {
+						throw new Error(`Both sender and receiver are the same: ${from.account}`)
 					}
 
-					// Load asset amount data
-					const { id, amount: amountValue } = amount
+					// Verify asset is on the same chain
+					const asset = AssetInstanceRef.fromString(baseTx.amount.id)
+					if (asset.chain !== localChain) {
+						throw new Error(`Reference to asset ${asset.asset} is on ${asset.chain}, but transaction is being processed by ${this.id}`)
+					}
 
-					// Unref asset data
-					const assetData = this._assets[id.asset]
+					// Try to load the asset instance data
+					const assetData = this._assets[asset.asset]
 					if (!assetData) {
-						throw new Error(`Asset ${id.asset} not found`)
+						throw new Error(`Entry for asset ${asset.asset} not found`)
 					}
 
-					// Unref chain asset data
 					const chainData = assetData.chains[localChain]
 					if (!chainData) {
-						throw new Error(`Asset ${id.asset} not found on ${this.id}`)
+						throw new Error(`Entry for asset ${asset.asset} not found on chain ${localChain}`)
 					}
 
 					// Get instance data
-					const instanceData = chainData[id.instance]
+					const instanceData = chainData[asset.instance]
+					if (!instanceData) {
+						const displayName = asset.instance == '' ? '[DEFAULT]' : asset.instance
+						throw new Error(`Entry for asset ${asset.asset} instance ${displayName} not found on chain ${localChain}`)
+					}
 
 					// Scale amount based on decimals
 					const scale = new BigNumber(10).exponentiatedBy(instanceData.decimals)
-					const amountScaled = BigInt(new BigNumber(amountValue).multipliedBy(scale).toFixed())
+					const amountScaled = BigInt(new BigNumber(baseTx.amount.amount).multipliedBy(scale).toFixed())
 
 					// Create transfer request
 					const request: BlockchainInternalTransferRequest = {
-						from: from.id.account,
-						fromPrivateKey: from.privateKey,
+						from: from.account,
+						fromPrivateKey: baseTx.from.privateKey,
 						to: to.account,
 						amount: amountScaled,
 						asset: instanceData.id,

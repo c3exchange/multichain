@@ -1,7 +1,7 @@
 import { setupMultiChain } from '../src'
 import { TransactionRequest, TransactionType } from '../src/blockchain'
 import { MultiChain } from '../src/multichain'
-import { AccountRef, AssetInstanceRef, AssetRef, ChainName, TransactionRef } from '../src/references'
+import { TransactionRef } from '../src/references'
 
 async function testGetCurrentBlocks(multi: MultiChain): Promise<void> {
 	const blocks = await multi.getCurrentBlocks()
@@ -17,15 +17,15 @@ async function testSendTransactions(multi: MultiChain): Promise<TransactionRef[]
 		{
 			type: TransactionType.Transfer,
 			from: {
-				id: AccountRef.fromString(`c3:chains:algorand:${algoFromAddress}`),
+				id: `c3:chains:algorand:${algoFromAddress}`,
 				privateKey: algoFromPrivateKey,
 			},
-			to: AccountRef.fromString(`c3:chains:algorand:${algoToAddress}`),
+			to: `c3:chains:algorand:${algoToAddress}`,
 			amount: {
-				id: AssetInstanceRef.fromString('c3:chains:algorand:assets:algo'),
+				id: 'c3:chains:algorand:assets:algo',
 				amount: '1.00'
 			},
-		}
+		},
 	]
 
 	const results = await multi.sendTransactions(transactions)

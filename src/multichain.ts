@@ -1,4 +1,4 @@
-import { ChainName, TransactionRef } from './references'
+import { AccountRef, AssetInstanceRef, ChainName, TransactionRef } from './references'
 import { Blockchain, Block, TransactionRequest, TransactionType, TransactionStatus } from './blockchain'
 
 export class MultiChain {
@@ -30,23 +30,22 @@ export class MultiChain {
 
 			switch (transaction.type) {
 				case TransactionType.Transfer: {
-					// Load transaction data
-					const { from, to, amount } = transaction
-
-					// Validate sender, receiver, and asset chains
-					const chain = from.id.chain
-					if (chain !== to.chain) {
-						throw new Error(`Cross-chain transfers are not supported: source ${chain} -> destination ${to.chain}`)
+					// Validate transaction from, to, and asset are all on the same chain
+					const from = AccountRef.fromString(transaction.from.id)
+					const to = AccountRef.fromString(transaction.to)
+					if (from.chain !== to.chain) {
+						throw new Error(`Cannot transfer from ${from.chain} to ${to.chain}. Ensure both accounts are on the same chain.`)
 					}
 
-					if (amount.id.chain !== chain) {
-						throw new Error(`Can't use asset from chain ${amount.id.chain} on chain ${chain}`)
+					const asset = AssetInstanceRef.fromString(transaction.amount.id)
+					if (asset.chain !== from.chain) {
+						throw new Error(`Cannot transfer asset instance ${asset.toString()} on chain ${asset.chain}, from and to accounts are on chain ${from.chain}`)
 					}
 
 					// Prepare transaction
-					const preparedList = prepared.get(chain) ?? []
+					const preparedList = prepared.get(from.chain) ?? []
 					preparedList.push({ transaction, index })
-					prepared.set(chain, preparedList)
+					prepared.set(from.chain, preparedList)
 				}
 				default: {
 					throw new Error('Unknown transaction type')
