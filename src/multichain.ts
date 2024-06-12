@@ -6,7 +6,14 @@ export class MultiChain {
 		private readonly _blockchains: Record<ChainName, Blockchain>,
 	) {}
 
-	// TODO: Get blockchain by name
+	public getBlockchain(chain: ChainName): Blockchain {
+		const blockchain = this._blockchains[chain]
+		if (!blockchain) {
+			throw new Error(`Blockchain not found: ${chain}`)
+		}
+
+		return blockchain
+	}
 	
 	public async getCurrentBlocks(): Promise<Record<ChainName, Block>> {
 		const entries = Object.entries(this._blockchains)
