@@ -1,4 +1,19 @@
 {
+  "name": "transfer-script",
+  "description": "This code is a work in progress, when it has reached production it will be released as an NPM package and this notice removed.",
+  "type": "commonjs",
+  "version": "0.0.1-beta1",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "scripts": {
+    "clean": "rimraf build",
+    "build": "npm run clean && tsc --build",
+    "prepack": "npm run build",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "Apache-2.0",
   "dependencies": {
     "@solana/spl-token": "^0.4.6",
     "@solana/web3.js": "^1.92.3",
@@ -10,6 +25,7 @@
     "web3": "^4.9.0"
   },
   "devDependencies": {
-    "@types/node": "^20.14.2"
+    "@types/node": "^20.14.2",
+    "rimraf": "^5.0.7"
   }
 }
