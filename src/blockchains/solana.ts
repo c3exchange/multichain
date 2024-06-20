@@ -68,7 +68,8 @@ export class SolanaBlockchain extends Blockchain {
 		}
 	}
 
-	protected async sendTransferTransactions(transfers: BlockchainInternalTransferRequest[]): Promise<TransactionRef[]> {
+	protected async sendTransferTransactions(transfers: BlockchainInternalTransferRequest[], timeoutMs = 30_000): Promise<TransactionRef[]> {
+		// TODO: Handle timeout
 		const getTA = async (payer: Signer, owner: PublicKey, asset: PublicKey, tokenAccount?: PublicKey): Promise<{ key: PublicKey, instructions: TransactionInstruction[] }> => {
 			// If the token account is not provided, use the ATA for the owner
 			if (tokenAccount === undefined) {

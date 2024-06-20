@@ -4,7 +4,7 @@ export enum ChainName {
 	Solana = 'solana',
 	Arbitrum = 'arbitrum',
 	Avalanche = 'avalanche',
-	Binance = 'binance',
+	Binance = 'bsc',
 }
 
 function checkChainName(value: string): value is ChainName {

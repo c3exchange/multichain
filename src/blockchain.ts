@@ -94,7 +94,7 @@ export abstract class Blockchain {
 	}
 
 	public abstract getCurrentBlock(): Promise<Block>
-	public abstract getTransactionsStatus(transactions: TransactionRef[]): Promise<TransactionStatus[]>
+	public abstract getTransactionsStatus(transactions: TransactionRef[], timeoutMs?: number): Promise<TransactionStatus[]>
 
 	public sendTransactions(transactions: TransactionRequest[]): Promise<TransactionRef[]> {
 		const pending: BlockchainInternalTransferRequest[] = []

@@ -45,10 +45,12 @@ export class AlgorandBlockchain extends Blockchain {
 		}
 	}
 
-	public async getTransactionsStatus(transactions: TransactionRef[]): Promise<TransactionStatus[]> {
+	public async getTransactionsStatus(transactions: TransactionRef[], timeoutMs = 30_000): Promise<TransactionStatus[]> {
+		const startTime = Date.now()
+
 		return Promise.all(transactions.map(async (ref) => {
 			// First check API pending tx list
-			const apiResult = await this._api.get(`/v2/transactions/pending/${ref.transaction}`)
+			const apiResult = await this._api.get(`/v2/transactions/pending/${ref.transaction}`, { timeout: timeoutMs })
 			const apiStatus = apiResult.status
 			const apiRound = apiResult.data['confirmed-round']
 			const apiPoolError = apiResult.data['pool-error']
@@ -61,7 +63,8 @@ export class AlgorandBlockchain extends Blockchain {
 			}
 
 			// Then check indexer for older transactions
-			const indexerResult = await this._indexer.get(`/v2/transactions/${ref.transaction}`)
+			const secondTimeout = timeoutMs - (Date.now() - startTime)
+			const indexerResult = await this._indexer.get(`/v2/transactions/${ref.transaction}`, { timeout: secondTimeout })
 			const indexerStatus = indexerResult.status
 			const indexerRound = indexerResult.data.transaction['confirmed-round']
 			if (indexerStatus === 200 && indexerRound > 0) {
@@ -76,8 +79,8 @@ export class AlgorandBlockchain extends Blockchain {
 		// Algorand does not require any chain-specific fields
 	}
 
-	protected async sendTransferTransactions(transfers: BlockchainInternalTransferRequest[]): Promise<TransactionRef[]> {
-		const paramsResult = await this._api.get('/v2/transactions/params')
+	protected async sendTransferTransactions(transfers: BlockchainInternalTransferRequest[], timeoutMs = 30_000): Promise<TransactionRef[]> {
+		const paramsResult = await this._api.get('/v2/transactions/params', { timeout: timeoutMs })
 		
 		const params: AlgorandParams = {
 			fee: 1000,

@@ -72,16 +72,18 @@ export class MultiChain {
 		return results
 	}
 
-	public async getTransactionsStatuses(transactions: TransactionRef[]): Promise<TransactionStatus[]> {
-		// Sort transations by chain
-		const prepared = new Map<ChainName, { ref: TransactionRef, index: number }[]>()
-		for (let index = 0; index < transactions.length; index++) {
-			const ref = transactions[index]
+	public async getTransactionsStatuses(transactions: TransactionRef[], timeoutMs = 30_000): Promise<TransactionStatus[]> {
+		// Create index map
+		const index = new Map(transactions.map((ref, index) => [ref, index]))
 
-			const chain = ref.chain
-			const preparedList = prepared.get(chain) ?? []
-			preparedList.push({ ref, index })
-			prepared.set(chain, preparedList)
+		// Sort transations by chain
+		const prepared = new Map<ChainName, TransactionRef[]>()
+		for (let i = 0; i < transactions.length; i++) {
+			const ref = transactions[i]
+
+			const preparedList = prepared.get(ref.chain) ?? []
+			preparedList.push(ref)
+			prepared.set(ref.chain, preparedList)
 		}
 
 		// Get transactions status for each chain
@@ -92,13 +94,39 @@ export class MultiChain {
 				throw new Error(`Blockchain not found: ${chain}`)
 			}
 
-			const result = await blockchain.getTransactionsStatus(transactions.map(({ ref }) => ref))
+			const result = await blockchain.getTransactionsStatus(transactions, timeoutMs)
 
-			for (let index = 0; index < result.length; index++) {
-				results[transactions[index].index] = result[index]
+			for (let i = 0; i < result.length; i++) {
+				results[index.get(transactions[i])!] = result[i]
 			}
 		}))
 
 		return results
+	}
+
+	public async waitForTransactions(transactions: TransactionRef[], timeoutMs = 3_600_000): Promise<TransactionStatus[]> {
+		const startTime = Date.now()
+		const result = new Array<TransactionStatus>(transactions.length)
+		const index = new Map(transactions.map((ref, index) => [ref, index]))
+
+		let runTime = 0
+		while (transactions.length > 0 && runTime < timeoutMs) {
+			// Get run time
+			runTime = Date.now() - startTime
+
+			// Get transactions status
+			const statuses = await this.getTransactionsStatuses(transactions, timeoutMs - runTime)
+			
+			// Update pending list
+			for (let i = transactions.length - 1; i >= 0; i--) {
+				if (statuses[i] !== TransactionStatus.Pending) {
+					const resultIndex = index.get(transactions[i])!
+					result[resultIndex] = statuses[i]
+					transactions.splice(i, 1)
+				}
+			}
+		}
+
+		return result
 	}
 }

@@ -89,41 +89,47 @@ export class EthereumBlockchain extends Blockchain {
 		// Ethereum does not require any chain-specific fields	
 	}
 
-	protected sendTransferTransactions(transfers: BlockchainInternalTransferRequest[]): Promise<TransactionRef[]> {
-		// TODO: Use batching
-		return Promise.all(transfers.map(async (transfer) => {
-			const createTransferTransaction = async (transfer: BlockchainInternalTransferRequest) => {
-				const gasPrice = await this._web3.eth.getGasPrice()
+	protected sendTransferTransactions(transfers: BlockchainInternalTransferRequest[], timeoutMs = 30_000): Promise<TransactionRef[]> {
+		const startTime = Date.now()
 
-				if (transfer.asset === '0x0000000000000000000000000000000000000000') {
-					// Ether transfer
-					return {
-						from: transfer.from,
-						to: transfer.to,
-						value: transfer.amount,
-						gasLimit: 21_000,
-						gasPrice,
-					}
-				} else {
-					// Token transfer
+		const sendsByAccount: Record<string, number> = {}
+		
+		const createTransferTransaction = async (transfer: BlockchainInternalTransferRequest) => {
+			const gasPrice = await this._web3.eth.getGasPrice()
 
-					// NOTE/FIXME: This will only work if address is actually an ERC20 token
-					// TODO: Include other token types, somehow tag them or look up the token type
-					const contract = this._contractCache[transfer.asset] ??= new this._web3.eth.Contract(ABI_ERC20, transfer.asset)
-					const nonce = await this._web3.eth.getTransactionCount(transfer.from)
+			if (transfer.asset === '0x0000000000000000000000000000000000000000') {
+				// Ether transfer
+				return {
+					from: transfer.from,
+					to: transfer.to,
+					value: transfer.amount,
+					gasLimit: 21_000,
+					gasPrice,
+				}
+			} else {
+				// Token transfer
 
-					return {
-						from: transfer.from,
-						to: transfer.asset,
-						value: 0,
-						data: contract.methods.transfer(transfer.to, transfer.amount).encodeABI(),
-						nonce,
-						gasLimit: 210_000, // TODO: Estimate gas?
-						gasPrice,
-					}
+				// NOTE/FIXME: This will only work if address is actually an ERC20 token
+				// TODO: Include other token types, somehow tag them or look up the token type
+				const contract = this._contractCache[transfer.asset] ??= new this._web3.eth.Contract(ABI_ERC20, transfer.asset)
+				const nonce = await this._web3.eth.getTransactionCount(transfer.from)
+				const offset = sendsByAccount[transfer.from] ??= 0
+				sendsByAccount[transfer.from]++
+
+				return {
+					from: transfer.from,
+					to: transfer.asset,
+					value: 0,
+					data: contract.methods.transfer(transfer.to, transfer.amount).encodeABI(),
+					nonce: nonce + BigInt(offset),
+					gasLimit: 210_000, // TODO: Estimate gas?
+					gasPrice,
 				}
 			}
-			
+		}
+
+		// TODO: Use batching
+		return Promise.all(transfers.map(async (transfer) => {
 			// Create, sign, and send transaction
 			const baseTxn = await createTransferTransaction(transfer)
 			const signedTxn = await this._web3.eth.accounts.signTransaction(baseTxn, decodeBase64(transfer.fromPrivateKey))
@@ -131,6 +137,10 @@ export class EthereumBlockchain extends Blockchain {
 
 			// Attach to the result events to track the transaction until it leaves the cache
 			return new Promise((resolve, reject) => {
+				const timeout = setTimeout(() => {
+					reject(new Error('Transaction timed out'))
+				})
+
 				result.once('transactionHash', (hash) => {
 					this._sentPending.add(hash)
 					resolve(new TransactionRef(this.id.chain, hash))
@@ -149,6 +159,7 @@ export class EthereumBlockchain extends Blockchain {
 					if (confirmations >= confirmRounds || receipt.status === 0n) {
 						sentPending.delete(receipt.transactionHash)
 						result.off('confirmation', confirmationCheck)
+						clearTimeout(timeout)
 					}
 				})
 

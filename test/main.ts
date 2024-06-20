@@ -24,8 +24,7 @@ async function testSendTransactions(multi: MultiChain): Promise<TransactionRef[]
 		},
 	]
 
-	const results = await multi.sendTransactions(transactions)
-	return results
+	return multi.sendTransactions(transactions)
 }
 
 async function testGetTransactionStatus(multi: MultiChain, transactions: TransactionRef[]): Promise<void> {
