@@ -1,4 +1,21 @@
 {
+  "name": "@c3exchange/transfer-script",
+  "description": "This code is a work in progress, when it has reached production it will be released as an NPM package and this notice removed.",
+  "type": "commonjs",
+  "version": "0.0.1-beta1",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "browser": "dist/multichain-sdk.min.js",
+  "scripts": {
+    "clean": "rimraf build dist",
+    "build-browser": "webpack",
+    "build": "npm run clean && tsc --build",
+    "prepack": "npm run build && npm run build-browser",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "Apache-2.0",
   "dependencies": {
     "@solana/spl-token": "^0.4.6",
     "@solana/web3.js": "^1.92.3",
@@ -10,6 +27,16 @@
     "web3": "^4.9.0"
   },
   "devDependencies": {
-    "@types/node": "^20.14.2"
+    "@types/node": "^20.14.2",
+    "buffer": "^6.0.3",
+    "crypto": "^1.0.1",
+    "crypto-browserify": "^3.12.0",
+    "readable-stream": "^4.5.2",
+    "rimraf": "^5.0.7",
+    "stream-browserify": "^3.0.0",
+    "ts-loader": "^9.5.1",
+    "vm-browserify": "^1.1.2",
+    "webpack": "^5.92.0",
+    "webpack-cli": "^5.1.4"
   }
 }
