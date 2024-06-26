@@ -26,8 +26,8 @@ export function setupMultiChain(config?: PartialConfig): MultiChain {
 	const avalancheApiUrl = chains.avalanche?.apiUrl ?? DEFAULT_MULTI_CHAIN_CONFIG.chains.avalanche.apiUrl
 	const avalancheRoundsToFinalize = chains.avalanche?.roundsToFinalize ?? DEFAULT_MULTI_CHAIN_CONFIG.chains.avalanche.roundsToFinalize
 
-	const binanceApiUrl = chains.binance?.apiUrl ?? DEFAULT_MULTI_CHAIN_CONFIG.chains.binance.apiUrl
-	const binanceRoundsToFinalize = chains.binance?.roundsToFinalize ?? DEFAULT_MULTI_CHAIN_CONFIG.chains.binance.roundsToFinalize
+	const binanceApiUrl = chains.bsc?.apiUrl ?? DEFAULT_MULTI_CHAIN_CONFIG.chains.bsc.apiUrl
+	const binanceRoundsToFinalize = chains.bsc?.roundsToFinalize ?? DEFAULT_MULTI_CHAIN_CONFIG.chains.bsc.roundsToFinalize
 
 	const ethereumApiUrl = chains.ethereum?.apiUrl ?? DEFAULT_MULTI_CHAIN_CONFIG.chains.ethereum.apiUrl
 	const ethereumRoundsToFinalize = chains.ethereum?.roundsToFinalize ?? DEFAULT_MULTI_CHAIN_CONFIG.chains.ethereum.roundsToFinalize
