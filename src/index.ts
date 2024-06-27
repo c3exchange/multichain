@@ -2,7 +2,7 @@ import { PartialAssetMap } from './blockchain'
 import { AlgorandBlockchain } from './blockchains/algorand'
 import { EthereumBlockchain } from './blockchains/ethereum'
 import { SolanaBlockchain } from './blockchains/solana'
-import { ChainConfigData, DEFAULT_MULTI_CHAIN_CONFIG, MultiChainConfig } from './config'
+import { ChainConfigData, DEFAULT_MULTI_CHAIN_CONFIG } from './config'
 import { MultiChain } from './multichain'
 import { ChainName } from './references'
 

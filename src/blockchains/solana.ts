@@ -29,7 +29,7 @@ export class SolanaBlockchain extends Blockchain {
 	public constructor(
 		chain: ChainName,
 		assets: PartialAssetMap,
-		baseURL = 'https://api.mainnet-beta.solana.com',
+		baseURL: string,
 	) {
 		super(chain, assets)
 

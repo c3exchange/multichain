@@ -49,27 +49,33 @@ export class AlgorandBlockchain extends Blockchain {
 		const startTime = Date.now()
 
 		return Promise.all(transactions.map(async (ref) => {
-			// First check API pending tx list
-			const apiResult = await this._api.get(`/v2/transactions/pending/${ref.transaction}`, { timeout: timeoutMs })
-			const apiStatus = apiResult.status
-			const apiRound = apiResult.data['confirmed-round']
-			const apiPoolError = apiResult.data['pool-error']
-			if (apiStatus === 200) {
-				if (apiRound > 0) {
-					return TransactionStatus.Confirmed
-				} else if (apiRound === 0 && apiPoolError === '') {
-					return TransactionStatus.Pending
+			try {
+				// First check API pending tx list
+				const apiResult = await this._api.get(`/v2/transactions/pending/${ref.transaction}`, { timeout: timeoutMs })
+				const apiStatus = apiResult.status
+				const apiRound = apiResult.data['confirmed-round']
+				const apiPoolError = apiResult.data['pool-error']
+				if (apiStatus === 200) {
+					if (apiRound > 0) {
+						return TransactionStatus.Confirmed
+					} else if (apiRound === 0 && apiPoolError === '') {
+						return TransactionStatus.Pending
+					}
 				}
-			}
+			} catch (error) {}
 
-			// Then check indexer for older transactions
-			const secondTimeout = timeoutMs - (Date.now() - startTime)
-			const indexerResult = await this._indexer.get(`/v2/transactions/${ref.transaction}`, { timeout: secondTimeout })
-			const indexerStatus = indexerResult.status
-			const indexerRound = indexerResult.data.transaction['confirmed-round']
-			if (indexerStatus === 200 && indexerRound > 0) {
-				return TransactionStatus.Confirmed
-			}
+			try {
+				// Then check indexer for older transactions
+				const secondTimeout = timeoutMs - (Date.now() - startTime)
+				const indexerResult = await this._indexer.get(`/v2/transactions/${ref.transaction}`, { timeout: secondTimeout })
+				const indexerStatus = indexerResult.status
+				const indexerRound = indexerResult.data.transaction['confirmed-round']
+				if (indexerStatus === 200 && indexerRound > 0) {
+					return TransactionStatus.Confirmed
+				}
+
+				return TransactionStatus.Failed
+			} catch (error) {}
 
 			return TransactionStatus.Failed
 		}))
