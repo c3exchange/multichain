@@ -7,7 +7,7 @@ export enum ChainName {
 	Binance = 'bsc',
 }
 
-function checkChainName(value: string): value is ChainName {
+export function checkChainName(value: string): value is ChainName {
 	return Object.values(ChainName).includes(value as ChainName)
 }
 

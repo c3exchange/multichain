@@ -104,13 +104,13 @@ export class MultiChain {
 		return results
 	}
 
-	public async waitForTransactions(transactions: TransactionRef[], timeoutMs = 3_600_000): Promise<TransactionStatus[]> {
+	public async waitForTransactions(transactions: TransactionRef[], timeoutMs = 0, repeatMs = 5_000): Promise<TransactionStatus[]> {
 		const startTime = Date.now()
 		const result = new Array<TransactionStatus>(transactions.length)
 		const index = new Map(transactions.map((ref, index) => [ref, index]))
 
 		let runTime = 0
-		while (transactions.length > 0 && runTime < timeoutMs) {
+		while (transactions.length > 0 && (runTime < timeoutMs || timeoutMs === 0)) {
 			// Get run time
 			runTime = Date.now() - startTime
 
@@ -125,6 +125,9 @@ export class MultiChain {
 					transactions.splice(i, 1)
 				}
 			}
+
+			// Wait for next poll
+			await new Promise((resolve) => setTimeout(resolve, repeatMs))
 		}
 
 		return result
