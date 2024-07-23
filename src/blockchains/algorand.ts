@@ -3,7 +3,7 @@ import axios, { AxiosInstance } from 'axios'
 
 import { decodeBase64 } from '../base64'
 import { ChainName, BlockRef, TransactionRef } from '../references'
-import { Blockchain, Block, BlockchainInternalTransferRequest, TransactionStatus, TransferTransaction, PartialAssetMap } from '../blockchain'
+import { Blockchain, Block, BlockchainInternalTransferRequest, TransactionStatus, TransferTransaction, PartialAssetMap, TransactionStatusTag } from '../blockchain'
 
 interface AlgorandParams {
 	fee: number
@@ -57,9 +57,9 @@ export class AlgorandBlockchain extends Blockchain {
 				const apiPoolError = apiResult.data['pool-error']
 				if (apiStatus === 200) {
 					if (apiRound > 0) {
-						return TransactionStatus.Confirmed
+						return { tag: TransactionStatusTag.Confirmed }
 					} else if (apiRound === 0 && apiPoolError === '') {
-						return TransactionStatus.Pending
+						return { tag: TransactionStatusTag.Pending }
 					}
 				}
 			} catch (error) {}
@@ -71,13 +71,13 @@ export class AlgorandBlockchain extends Blockchain {
 				const indexerStatus = indexerResult.status
 				const indexerRound = indexerResult.data.transaction['confirmed-round']
 				if (indexerStatus === 200 && indexerRound > 0) {
-					return TransactionStatus.Confirmed
+					return { tag: TransactionStatusTag.Confirmed }
 				}
 
-				return TransactionStatus.Failed
-			} catch (error) {}
-
-			return TransactionStatus.Failed
+				return { tag: TransactionStatusTag.Failed, error: 'Transaction not found' }
+			} catch (error) {
+				return { tag: TransactionStatusTag.Failed, error: JSON.stringify(error) }
+			}
 		}))
 	}
 	

@@ -2,7 +2,7 @@ import { ContractAbi, Web3 } from 'web3'
 import { Contract } from 'web3-eth-contract'
 
 import { ChainName, BlockRef, TransactionRef } from '../references'
-import { Blockchain, Block, TransactionStatus, BlockchainInternalTransferRequest, TransferTransaction, PartialAssetMap } from '../blockchain'
+import { Blockchain, Block, TransactionStatus, BlockchainInternalTransferRequest, TransferTransaction, PartialAssetMap, TransactionStatusTag } from '../blockchain'
 import { decodeBase64 } from '../base64'
 
 const ABI_ERC20 = [
@@ -63,7 +63,7 @@ export class EthereumBlockchain extends Blockchain {
 		return Promise.all(transactions.map(async (ref) => {
 			// If it's in the sent pending set, it's still pending
 			if (this._sentPending.has(ref.transaction)) {
-				return TransactionStatus.Pending
+				return { tag: TransactionStatusTag.Pending }
 			}
 
 			// Look up the transaction receipt
@@ -76,12 +76,12 @@ export class EthereumBlockchain extends Blockchain {
 
 			// If the receipt is there, check the status
 			if (receipt.status === 0n) {
-				return TransactionStatus.Failed
+				return { tag: TransactionStatusTag.Failed, error: JSON.stringify(receipt.logs) }
 			}
 
 			// Check the block number to see if it's confirmed
 			const confirmed = Number(receipt.blockNumber) + this._roundsToFinalize <= blockNumber
-			return confirmed ? TransactionStatus.Confirmed : TransactionStatus.Pending
+			return confirmed ? { tag: TransactionStatusTag.Confirmed } : { tag: TransactionStatusTag.Pending }
 		}))
 	}
 	

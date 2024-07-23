@@ -1,5 +1,5 @@
 import { AccountRef, AssetInstanceRef, ChainName, TransactionRef } from './references'
-import { Blockchain, Block, TransactionRequest, TransactionType, TransactionStatus } from './blockchain'
+import { Blockchain, Block, TransactionRequest, TransactionType, TransactionStatus, TransactionStatusTag } from './blockchain'
 
 export class MultiChain {
 	public constructor(
@@ -119,7 +119,7 @@ export class MultiChain {
 			
 			// Update pending list
 			for (let i = transactions.length - 1; i >= 0; i--) {
-				if (statuses[i] !== TransactionStatus.Pending) {
+				if (statuses[i].tag !== TransactionStatusTag.Pending) {
 					const resultIndex = index.get(transactions[i])!
 					result[resultIndex] = statuses[i]
 					transactions.splice(i, 1)

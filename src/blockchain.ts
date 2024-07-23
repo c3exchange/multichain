@@ -53,10 +53,19 @@ export interface TransferTransaction {
 
 export type TransactionRequest = TransferTransaction
 
-export enum TransactionStatus {
+export enum TransactionStatusTag {
 	Pending = 'pending',
 	Confirmed = 'confirmed',
 	Failed = 'failed',
+}
+
+export type TransactionStatus = {
+	tag: TransactionStatusTag.Failed
+	error: string
+} | {
+	tag: TransactionStatusTag.Pending
+} | {
+	tag: TransactionStatusTag.Confirmed
 }
 
 export interface Block {

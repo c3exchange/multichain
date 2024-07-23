@@ -20,7 +20,7 @@ import {
 } from '@solana/web3.js'
 
 import { ChainName, BlockRef, TransactionRef } from '../references'
-import { Blockchain, Block, TransactionStatus, BlockchainInternalTransferRequest, TransferTransaction, PartialAssetMap } from '../blockchain'
+import { Blockchain, Block, TransactionStatus, BlockchainInternalTransferRequest, TransferTransaction, PartialAssetMap, TransactionStatusTag } from '../blockchain'
 import { decodeBase64 } from '../base64'
 
 export class SolanaBlockchain extends Blockchain {
@@ -50,11 +50,11 @@ export class SolanaBlockchain extends Blockchain {
 
 		return results.value.map((result) => {
 			if (result === null || result.err !== null) {
-				return TransactionStatus.Failed
+				return { tag: TransactionStatusTag.Failed, error: result?.err?.toString() ?? 'Unknown error' }
 			} else if (result.confirmationStatus === 'finalized') {
-				return TransactionStatus.Confirmed
+				return { tag: TransactionStatusTag.Confirmed }
 			} else {
-				return TransactionStatus.Pending
+				return { tag: TransactionStatusTag.Pending }
 			}
 		})
 	}
