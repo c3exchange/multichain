@@ -1,7 +1,7 @@
 import BigNumber from 'bignumber.js'
 
 import { Base64String } from './base64'
-import { ChainName, AssetName, AssetRef, AssetInstanceRef, AccountRef, BlockRef, ChainRef, TransactionRef, AccountRefString, AssetInstanceRefString } from './references'
+import { ChainName, AssetName, AssetRef, AssetInstanceRef, AccountRef, BlockRef, ChainRef, TransactionRef, AccountRefString, AssetInstanceRefString, checkAssetName, checkChainName, normalizeAssetName, normalizeChainName } from './references'
 
 export type RawChainRef = string
 
@@ -81,12 +81,50 @@ export interface BlockchainInternalTransferRequest {
 
 export abstract class Blockchain {
 	private readonly _id: ChainRef
+	protected readonly _assets: AssetMap
 
 	public constructor(
 		chain: ChainName,
-		protected readonly _assets: PartialAssetMap,
+		assets: PartialAssetMap,
 	) {
 		this._id = new ChainRef(chain)
+
+		const assetNames: { [K in keyof AssetMap]: boolean } = {
+			[AssetName.ALGO]: false,
+			[AssetName.ARB]: false,
+			[AssetName.AVAX]: false,
+			[AssetName.BNB]: false,
+			[AssetName.BTC]: false,
+			[AssetName.ETH]: false,
+			[AssetName.PYTH]: false,
+			[AssetName.SOL]: false,
+			[AssetName.USDC]: false,
+			[AssetName.W]: false,
+		}
+
+		this._assets = Object.fromEntries(Object.entries(assets).map(([assetName, assetData]) => {
+			const normAsset = normalizeAssetName(assetName)
+			assetNames[normAsset] = true
+			const chains = Object.fromEntries(Object.entries(assetData.chains).map(([chainName, chainData]) => {
+				const normChain = normalizeChainName(chainName)
+				return [normChain, Object.fromEntries(Object.entries(chainData).map(([instanceName, instanceData]) => {
+					if (instanceData.decimals < 0 || !Number.isInteger(instanceData.decimals)) {
+						throw new Error(`Invalid decimals for asset ${assetName} instance ${instanceName}: ${instanceData.decimals}`)
+					}
+
+					return [instanceName, instanceData]
+				}))]
+			}))
+			return [normAsset, { chains }]
+		})) as AssetMap
+
+		// Check for missing assets
+		for (const assetName in assetNames) {
+			// NOTE: Cast because TS doesn't understand that the key is a valid asset name
+			if (!assetNames[assetName as AssetName]) {
+				throw new Error(`Missing asset data for ${assetName}`)
+			}
+		}
 	}
 
 	public get id(): ChainRef {

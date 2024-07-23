@@ -8,7 +8,15 @@ export enum ChainName {
 }
 
 export function checkChainName(value: string): value is ChainName {
-	return Object.values(ChainName).includes(value as ChainName)
+	return Object.values(ChainName).includes(value.toLowerCase() as ChainName)
+}
+
+export function normalizeChainName(value: string): ChainName {
+	if (!checkChainName(value)) {
+		throw new Error(`Invalid chain name: ${value}`)
+	}
+
+	return value.toLowerCase() as ChainName
 }
 
 export enum AssetName {
@@ -25,7 +33,15 @@ export enum AssetName {
 }
 
 export function checkAssetName(value: string): value is AssetName {
-	return Object.values(AssetName).includes(value as AssetName)
+	return Object.values(AssetName).includes(value.toLowerCase() as AssetName)
+}
+
+export function normalizeAssetName(value: string): AssetName {
+	if (!checkAssetName(value)) {
+		throw new Error(`Invalid asset name: ${value}`)
+	}
+
+	return value.toLowerCase() as AssetName
 }
 
 export class ChainRef {
@@ -35,7 +51,7 @@ export class ChainRef {
 			throw new Error(`Invalid chain reference: ${value}`)
 		}
 
-		return new ChainRef(chain)
+		return new ChainRef(normalizeChainName(chain))
 	}
 
 	public constructor(
@@ -58,7 +74,7 @@ export class AccountRef {
 
 		// TODO: Validate account per-chain format
 
-		return new AccountRef(chain, account)
+		return new AccountRef(normalizeChainName(chain), account)
 	}
 
 	public constructor(
@@ -82,7 +98,7 @@ export class TransactionRef {
 
 		// TODO: Validate transaction per-chain format
 
-		return new TransactionRef(chain, transaction)
+		return new TransactionRef(normalizeChainName(chain), transaction)
 	}
 
 	public constructor(
@@ -106,7 +122,7 @@ export class BlockRef {
 
 		// TODO: Validate block per-chain format
 
-		return new BlockRef(chain, block)
+		return new BlockRef(normalizeChainName(chain), block)
 	}
 
 	public constructor(
@@ -130,7 +146,7 @@ export class AssetRef {
 
 		// TODO: Validate asset ID format
 
-		return new AssetRef(asset)
+		return new AssetRef(normalizeAssetName(asset))
 	}
 
 	public constructor(
@@ -151,7 +167,7 @@ export class AssetInstanceRef {
 			throw new Error(`Invalid chain asset reference: ${value}`)
 		}
 
-		return new AssetInstanceRef(chain, asset, instance)
+		return new AssetInstanceRef(normalizeChainName(chain), normalizeAssetName(asset), instance)
 	}
 
 	public constructor(
