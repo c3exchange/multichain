@@ -146,20 +146,8 @@ export class SolanaBlockchain extends Blockchain {
 			// Create priority instruction
 			const getNetworkPriorityRate = async () => {
 				const fees = await this._connection.getRecentPrioritizationFees({ lockedWritableAccounts: [fromTA, toTA, asset] })
-				
-				// Average fees with an exponential moving average
-				const alpha = 0.9
-
-				let sum = 0
-				let weight = 0
-				let scale = 1
-				for (let i = fees.length - 1; i >= 0; i--) {
-					sum += fees[i].prioritizationFee * scale
-					weight += scale
-					scale *= alpha
-				}
-
-				return sum / weight
+				const averageFee = fees.reduce((acc, fee) => acc + fee.prioritizationFee, 0) / fees.length
+				return Math.ceil(averageFee)
 			}
 
 			const priorityRate = transfer.solana?.priorityRate ?? await getNetworkPriorityRate()
