@@ -89,9 +89,7 @@ export class EthereumBlockchain extends Blockchain {
 		// Ethereum does not require any chain-specific fields	
 	}
 
-	protected sendTransferTransactions(transfers: BlockchainInternalTransferRequest[], timeoutMs = 30_000): Promise<TransactionRef[]> {
-		const startTime = Date.now()
-
+	protected sendTransferTransactions(transfers: BlockchainInternalTransferRequest[]): Promise<TransactionRef[]> {
 		const sendsByAccount: Record<string, number> = {}
 		
 		const createTransferTransaction = async (transfer: BlockchainInternalTransferRequest) => {

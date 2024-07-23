@@ -45,13 +45,11 @@ export class AlgorandBlockchain extends Blockchain {
 		}
 	}
 
-	public async getTransactionsStatus(transactions: TransactionRef[], timeoutMs = 30_000): Promise<TransactionStatus[]> {
-		const startTime = Date.now()
-
+	public async getTransactionsStatus(transactions: TransactionRef[]): Promise<TransactionStatus[]> {
 		return Promise.all(transactions.map(async (ref) => {
 			try {
 				// First check API pending tx list
-				const apiResult = await this._api.get(`/v2/transactions/pending/${ref.transaction}`, { timeout: timeoutMs })
+				const apiResult = await this._api.get(`/v2/transactions/pending/${ref.transaction}`)
 				const apiStatus = apiResult.status
 				const apiRound = apiResult.data['confirmed-round']
 				const apiPoolError = apiResult.data['pool-error']
@@ -66,8 +64,7 @@ export class AlgorandBlockchain extends Blockchain {
 
 			try {
 				// Then check indexer for older transactions
-				const secondTimeout = timeoutMs - (Date.now() - startTime)
-				const indexerResult = await this._indexer.get(`/v2/transactions/${ref.transaction}`, { timeout: secondTimeout })
+				const indexerResult = await this._indexer.get(`/v2/transactions/${ref.transaction}`)
 				const indexerStatus = indexerResult.status
 				const indexerRound = indexerResult.data.transaction['confirmed-round']
 				if (indexerStatus === 200 && indexerRound > 0) {

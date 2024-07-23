@@ -49,7 +49,9 @@ export class SolanaBlockchain extends Blockchain {
 		const results = await this._connection.getSignatureStatuses(transactions.map((tx) => tx.transaction), { searchTransactionHistory: true })
 
 		return results.value.map((result) => {
-			if (result === null || result.err !== null) {
+			if (result === null) {
+				return { tag: TransactionStatusTag.Pending }
+			} else if (result.err !== null) {
 				return { tag: TransactionStatusTag.Failed, error: result?.err?.toString() ?? 'Unknown error' }
 			} else if (result.confirmationStatus === 'finalized') {
 				return { tag: TransactionStatusTag.Confirmed }
@@ -68,7 +70,7 @@ export class SolanaBlockchain extends Blockchain {
 		}
 	}
 
-	protected async sendTransferTransactions(transfers: BlockchainInternalTransferRequest[], timeoutMs = 30_000): Promise<TransactionRef[]> {
+	protected async sendTransferTransactions(transfers: BlockchainInternalTransferRequest[]): Promise<TransactionRef[]> {
 		// TODO: Handle timeout
 		const getTA = async (payer: Signer, owner: PublicKey, asset: PublicKey, tokenAccount?: PublicKey): Promise<{ key: PublicKey, instructions: TransactionInstruction[] }> => {
 			// If the token account is not provided, use the ATA for the owner
