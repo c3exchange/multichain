@@ -72,7 +72,7 @@ export class MultiChain {
 		return results
 	}
 
-	public async getTransactionsStatuses(transactions: TransactionRef[], timeoutMs = 30_000): Promise<TransactionStatus[]> {
+	public async getTransactionsStatuses(transactions: TransactionRef[]): Promise<TransactionStatus[]> {
 		// Create index map
 		const index = new Map(transactions.map((ref, index) => [ref, index]))
 
@@ -94,7 +94,7 @@ export class MultiChain {
 				throw new Error(`Blockchain not found: ${chain}`)
 			}
 
-			const result = await blockchain.getTransactionsStatus(transactions, timeoutMs)
+			const result = await blockchain.getTransactionsStatus(transactions)
 
 			for (let i = 0; i < result.length; i++) {
 				results[index.get(transactions[i])!] = result[i]
@@ -104,18 +104,13 @@ export class MultiChain {
 		return results
 	}
 
-	public async waitForTransactions(transactions: TransactionRef[], timeoutMs = 0, repeatMs = 5_000): Promise<TransactionStatus[]> {
-		const startTime = Date.now()
+	public async waitForTransactions(transactions: TransactionRef[], repeatMs = 5_000): Promise<TransactionStatus[]> {
 		const result = new Array<TransactionStatus>(transactions.length)
 		const index = new Map(transactions.map((ref, index) => [ref, index]))
 
-		let runTime = 0
-		while (transactions.length > 0 && (runTime < timeoutMs || timeoutMs === 0)) {
-			// Get run time
-			runTime = Date.now() - startTime
-
+		while (transactions.length > 0) {
 			// Get transactions status
-			const statuses = await this.getTransactionsStatuses(transactions, timeoutMs - runTime)
+			const statuses = await this.getTransactionsStatuses(transactions)
 			
 			// Update pending list
 			for (let i = transactions.length - 1; i >= 0; i--) {

@@ -135,10 +135,6 @@ export class EthereumBlockchain extends Blockchain {
 
 			// Attach to the result events to track the transaction until it leaves the cache
 			return new Promise((resolve, reject) => {
-				const timeout = setTimeout(() => {
-					reject(new Error('Transaction timed out'))
-				})
-
 				result.once('transactionHash', (hash) => {
 					this._sentPending.add(hash)
 					resolve(new TransactionRef(this.id.chain, hash))
@@ -157,7 +153,6 @@ export class EthereumBlockchain extends Blockchain {
 					if (confirmations >= confirmRounds || receipt.status === 0n) {
 						sentPending.delete(receipt.transactionHash)
 						result.off('confirmation', confirmationCheck)
-						clearTimeout(timeout)
 					}
 				})
 
