@@ -2,7 +2,7 @@
   "name": "@c3exchange/multichain",
   "description": "This code is a work in progress, when it has reached production it will be released as an NPM package and this notice removed.",
   "type": "commonjs",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "browser": "dist/multichain-sdk.min.js",
