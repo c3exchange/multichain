@@ -22,7 +22,7 @@ export function normalizeChainName(value: string): ChainName {
 export enum AssetName {
 	ALGO = 'algo',
 	AVAX = 'avax',
-	BTC = 'btc',
+	WBTC = 'wbtc',
 	ETH = 'eth',
 	USDC = 'usdc',
 	ARB = 'arb',

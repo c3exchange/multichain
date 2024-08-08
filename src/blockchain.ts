@@ -103,7 +103,7 @@ export abstract class Blockchain {
 			[AssetName.ARB]: false,
 			[AssetName.AVAX]: false,
 			[AssetName.BNB]: false,
-			[AssetName.BTC]: false,
+			[AssetName.WBTC]: false,
 			[AssetName.ETH]: false,
 			[AssetName.PYTH]: false,
 			[AssetName.SOL]: false,

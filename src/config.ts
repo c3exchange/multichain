@@ -101,7 +101,7 @@ export const DEFAULT_MULTI_CHAIN_CONFIG: MultiChainConfig = {
 				},
 			},
 		},
-		[AssetName.BTC]: {
+		[AssetName.WBTC]: {
 			chains: {
 				[ChainName.Algorand]: {
 					'wormhole': {
