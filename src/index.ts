@@ -13,6 +13,11 @@ export type PartialConfig = {
 	chains?: PartialRec<ChainConfigData>
 }
 
+export * from "./blockchain"
+export * from "./multichain"
+export * from "./references"
+export * from "./base64"
+
 export function setupMultiChain(config?: PartialConfig): MultiChain {
 	const assets = config?.assets ?? DEFAULT_MULTI_CHAIN_CONFIG.assets
 	const chains = config?.chains ?? DEFAULT_MULTI_CHAIN_CONFIG.chains
